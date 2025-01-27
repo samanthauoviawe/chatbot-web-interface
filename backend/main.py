@@ -1,12 +1,11 @@
 import requests  # To fetch weather data and time data
 from fastapi import FastAPI
 from pydantic import BaseModel
-from transformers import pipeline, AutoTokenizer, AutoModelForCausalLM
-import torch
+from huggingface_hub import InferenceClient  # Import the InferenceClient for Hugging Face API
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime
 import re
-import logging  # Using logging instead of print statements 
+import logging  # Using logging instead of print statements
 
 app = FastAPI()
 
@@ -14,19 +13,9 @@ app = FastAPI()
 logging.basicConfig(level=logging.WARNING)  # You can change the level based on the verbosity you need
 logger = logging.getLogger(__name__)
 
-# Load the TinyLlama model and tokenizer manually
-model_name = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
-tokenizer = AutoTokenizer.from_pretrained(model_name)
-model = AutoModelForCausalLM.from_pretrained(model_name)
-
-# Initialize the pipeline for text generation with TinyLlama
-pipe = pipeline(
-    "text-generation",
-    model=model,
-    tokenizer=tokenizer,
-    torch_dtype=torch.bfloat16,
-    device_map="auto",
-    truncation=True,
+# Create the Inference Client to interact with Hugging Face API
+client = InferenceClient(
+    api_key="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"  # Hugging Face API key
 )
 
 # Add CORS middleware to allow frontend access
@@ -132,54 +121,23 @@ async def chat(prompt: Prompt):
 
     else:
         try:
-            # Pass other queries to the AI model
+            # Pass other queries to Hugging Face model API
             messages = [
-                {"role": "system", "content": "You are a helpful assistant that answers questions in a conversational manner."},
                 {"role": "user", "content": user_input}
             ]
 
-            outputs = pipe(
-                messages, 
-                max_length=150,
-                do_sample=True,
-                temperature=0.7, 
-                top_k=50, 
-                top_p=0.95,
-                num_return_sequences=1
+            # Make API call to Hugging Face for inference
+            completion = client.chat.completions.create(
+                model="TinyLlama/TinyLlama-1.1B-Chat-v1.0",
+                messages=messages,
+                max_tokens=500
             )
 
-            response = ""
-
-            # Check if the outputs is a list, which it most likely will be
-            if isinstance(outputs, list):
-                for output in outputs:
-                    # Check if each item is a dictionary and has the 'generated_text'
-                    if isinstance(output, dict) and "generated_text" in output:
-                        generated_text = output["generated_text"]
-                        if isinstance(generated_text, list):
-                            # If generated_text is a list, we iterate through and check for the assistant's response
-                            assistant_response = None
-                            for item in generated_text:
-                                if item.get("role") == "assistant":  # Ensure we pick the assistant's response
-                                    assistant_response = item.get("content", "").strip()
-                                    break
-                            if assistant_response:
-                                response += assistant_response + " "
-                            else:
-                                response = "Sorry, I couldn't generate a response."
-                        elif isinstance(generated_text, str):
-                            # If generated_text is a string, assume it's the assistant's response
-                            response += generated_text.strip() + " "
-                        else:
-                            response = "Unexpected response format from the model."
-                    else:
-                        response = "Unexpected output format: No 'generated_text' key found."
-            else:
-                response = "Sorry, I couldn't generate a response."
+            response = completion.choices[0].message['content']
 
         except Exception as e:
-            logger.error(f"Error processing request: {str(e)}")  # Log full error
-            response = "Sorry, there was an error processing your request. Error details: please check logs."
+            logger.error(f"Error processing request: {str(e)}")
+            response = "Sorry, there was an error processing your request. Please check the logs."
 
     return {"response": response}
 
