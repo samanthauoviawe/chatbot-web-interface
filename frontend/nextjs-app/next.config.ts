@@ -5,3 +5,12 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
+
+// next.config.ts
+module.exports = {
+  reactStrictMode: true,
+  experimental: {
+    appDir: true, // Enable the App Router (this is needed for Next.js 13+)
+  },
+};
+
