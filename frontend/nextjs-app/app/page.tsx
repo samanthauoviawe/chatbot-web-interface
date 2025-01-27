@@ -21,7 +21,7 @@ export default function Home() {
     setLoading(true); // Set loading to true while waiting for response
 
     try {
-      const res = await axios.post("http://localhost:8000/chat", { text: input }); // Sends the message via Axios Post request to the backend
+      const res = await axios.post("https://chatbot-web-interface.vercel.app", { text: input }); // Sends the message via Axios Post request to the backend
       setMessages((prevMessages) => [
         ...prevMessages, { text: res.data.response, type: "bot" }]); // Adds the chatbot's response to the messages array
     } catch (error) {
