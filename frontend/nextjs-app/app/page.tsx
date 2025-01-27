@@ -16,14 +16,14 @@ export default function Home() {
   const sendMessage = async () => {
     if (!input.trim()) return; // Checks if input is not empty 
     setMessages((prevMessages) => [
-      ...prevMessages, { text: input, type: "user" }]); // Adds the user's message to the messages array 
+     ...prevMessages, { text: input, type: "user" }]); // Adds the user's message to the messages array 
     setInput(""); // Clears the input field
     setLoading(true); // Set loading to true while waiting for response
 
     try {
-      const res = await axios.post("https://chatbot-web-interface.vercel.app", { text: input }); // Sends the message via Axios Post request to the backend
+      const res = await axios.post("https://chatbot-web-interface-lgoho9h2l-samanthauoviawes-projects.vercel.app/chat", { text: input }); // Sends the message via Axios Post request to the backend
       setMessages((prevMessages) => [
-        ...prevMessages, { text: res.data.response, type: "bot" }]); // Adds the chatbot's response to the messages array
+     ...prevMessages, { text: res.data.response, type: "bot" }]); // Adds the chatbot's response to the messages array
     } catch (error) {
       console.error("Error fetching chatbot response:", error);
       setMessages((prevMessages) => [
