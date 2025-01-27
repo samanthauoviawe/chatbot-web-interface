@@ -6,8 +6,13 @@ import torch
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime
 import re
+import logging  # Using logging instead of print statements 
 
 app = FastAPI()
+
+# Set up logging
+logging.basicConfig(level=logging.WARNING)  # You can change the level based on the verbosity you need
+logger = logging.getLogger(__name__)
 
 # Load the TinyLlama model and tokenizer manually
 model_name = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
@@ -33,7 +38,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 class Prompt(BaseModel):
     text: str
 
@@ -52,7 +56,8 @@ def get_weather(city: str) -> str:
         else:
             return f"Sorry, I couldn't fetch the weather data for {city}."
     except Exception as e:
-        return f"Error fetching weather data: {str(e)}"
+        logger.error(f"Error fetching weather data: {str(e)}")  # Log detailed error internally
+        return "Error fetching weather data."
 
 # Function to extract the city from user input using regular expressions
 def extract_city_from_input(user_input: str) -> str:
@@ -72,12 +77,12 @@ CITY_TO_TIMEZONE = {
     "sydney": "Australia/Sydney",
     "tokyo": "Asia/Tokyo",
     "dubai": "Asia/Dubai",
-    # Add more cities here later
 }
 
 def get_time_for_city(city: str) -> str:
     city = city.lower()  # Ensure the city is lowercase for matching
     timezone = CITY_TO_TIMEZONE.get(city, "America/New_York")  # Default to New York if not found
+
     try:
         url = f"http://worldtimeapi.org/api/timezone/{timezone}"
         response = requests.get(url, timeout=30)  # Increased timeout to 30 seconds
@@ -91,9 +96,11 @@ def get_time_for_city(city: str) -> str:
         else:
             return f"Sorry, I couldn't fetch the time data for {city}."
     except requests.exceptions.Timeout:
+        logger.warning(f"Timeout occurred when fetching time for {city}.")  # Log timeout warning
         return "Error: The request to fetch time data timed out. Please try again later."
     except requests.exceptions.RequestException as e:
-        return f"Error fetching time data: {str(e)}"
+        logger.error(f"Error fetching time data: {str(e)}")  # Log request exceptions
+        return "Error fetching time data."
 
 @app.post("/chat")
 async def chat(prompt: Prompt):
@@ -171,7 +178,8 @@ async def chat(prompt: Prompt):
                 response = "Sorry, I couldn't generate a response."
 
         except Exception as e:
-            response = f"Sorry, there was an error processing your request. Error details: {str(e)}"
+            logger.error(f"Error processing request: {str(e)}")  # Log full error
+            response = "Sorry, there was an error processing your request. Error details: please check logs."
 
     return {"response": response}
 
