@@ -21,13 +21,15 @@ export default function Home() {
     setLoading(true); // Set loading to true while waiting for response
 
     try {
-      const res = await axios.post("https://chatbot-web-interface-lgoho9h2l-samanthauoviawes-projects.vercel.app", { text: input }); // Sends the message via Axios Post request to the backend
+      const res = await axios.post("https://chatbot-web-interface-57kaal4hx-samanthauoviawes-projects.vercel.app/chat", { text: input });  // Added /chat to the URL
       setMessages((prevMessages) => [
-     ...prevMessages, { text: res.data.response, type: "bot" }]); // Adds the chatbot's response to the messages array
+        ...prevMessages, { text: res.data.response, type: "bot" }
+      ]);  // Adds the chatbot's response to the messages array
     } catch (error) {
       console.error("Error fetching chatbot response:", error);
       setMessages((prevMessages) => [
-        ...prevMessages, { text: "Error: Could not reach the server.", type: "bot" }]); // Displays an error message
+        ...prevMessages, { text: "Error: Could not reach the server.", type: "bot" }
+      ]);  // Displays an error message
     } finally {
       setLoading(false);  // Set loading to false when the request completes (success or error)
     }
