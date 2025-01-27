@@ -27,7 +27,7 @@ pipe = pipeline(
 # Add CORS middleware to allow frontend access
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "https://chatbot-web-interface-57kaal4hx-samanthauoviawes-projects.vercel.app"],  # Corrected the URL
+    allow_origins=["http://localhost:3000",],  # Corrected the URL
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
